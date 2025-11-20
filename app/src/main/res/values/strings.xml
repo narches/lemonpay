@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Lemon</string>
+    <string name="title">Greek Salad</string>
+    <string name="location">Boston, MA</string>
+    <string name="description">A delicious mix of veggies and feta, served fresh!</string>
+    <string name="order_for_takeaway">Order</string>
+</resources>
