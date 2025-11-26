@@ -34,7 +34,7 @@ fun ProfileScreen(navController: NavController, dataStore: DataStoreManager) {
         if (user.imageUri.isNotEmpty()) {
             AsyncImage(model = user.imageUri, contentDescription = "profile", modifier = Modifier.size(120.dp).clip(CircleShape))
         } else {
-            Image(painter = painterResource(id = R.drawable.lemon), contentDescription = "default", modifier = Modifier.size(120.dp))
+            Image(painter = painterResource(id = R.drawable.gllemon), contentDescription = "default", modifier = Modifier.size(120.dp))
         }
         Spacer(modifier = Modifier.height(16.dp))
         Text(user.name.ifBlank { "No name" }, style = MaterialTheme.typography.h6)

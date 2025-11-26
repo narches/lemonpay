@@ -17,7 +17,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 
@@ -33,13 +35,14 @@ fun LoginScreen(navController: NavController, dataStoreManager: DataStoreManager
     var password by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
 
-    Column(modifier = Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.Center) {
-        Text("Login", style = MaterialTheme.typography.h5)
+    Column(modifier = Modifier.fillMaxSize() .padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center) {
+        Text("Login", style = MaterialTheme.typography.h5,  textAlign = TextAlign.Center,)
         Spacer(modifier = Modifier.height(12.dp))
         OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("Email") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(25.dp),)
         Spacer(modifier = Modifier.height(8.dp))
         OutlinedTextField(value = password, onValueChange = { password = it }, label = { Text("Password") }, visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(25.dp),)
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(30.dp))
         Button(onClick = {
             scope.launch {
                 val user = dataStoreManager.userFlow.first()
@@ -62,10 +65,10 @@ fun LoginScreen(navController: NavController, dataStoreManager: DataStoreManager
                 Text("Login", color = Color(0xFFF4CE14), fontSize = 20.sp)
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(10.dp))
         Column {
             TextButton(onClick = { navController.navigate("register") }) {
-                Text("Sign up", color = Color(0xFF495E57), fontSize = 20.sp)
+                Text("Sign up",   textAlign = TextAlign.Center, color = Color(0xFF495E57), fontSize = 20.sp)
             }
         }
     }

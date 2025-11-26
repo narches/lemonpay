@@ -60,7 +60,7 @@ fun RegistrationScreen(navController: NavController, dataStoreManager: DataStore
             )
         } else {
             Image(
-                painter = painterResource(id = R.drawable.lemon),
+                painter = painterResource(id = R.drawable.gllemon),
                 contentDescription = "avatar placeholder",
                 modifier = Modifier.size(100.dp)
             )

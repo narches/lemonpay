@@ -21,6 +21,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
+import android.content.Context
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
@@ -31,15 +33,12 @@ import androidx.navigation.compose.composable
 import androidx.core.view.WindowCompat
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
-import androidx.compose.ui.platform.LocalContext
 import com.example.lemon.profile.ProfileScreen
 import com.example.lemon.onboarding.OnboardingScreen
 import com.example.lemon.datastore.DataStoreManager
 import kotlinx.coroutines.delay
+import com.example.lemon.onboarding.OnboardingScreen
 import androidx.compose.material.CircularProgressIndicator
-import androidx.navigation.compose.currentBackStackEntryAsState
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.first
 
 
 
@@ -66,9 +65,12 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppEntry() {
     val context = LocalContext.current
+    val navController = rememberNavController()
     val dataStore = remember { DataStoreManager(context) }
     val user by dataStore.userFlow.collectAsState(initial = null)
+    val prefs = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
 
+    val isRegistered = prefs.getBoolean("isRegistered", false)
     // Loading state
     if (user == null) {
         Box(Modifier.fillMaxSize(), Alignment.Center) {
@@ -78,34 +80,35 @@ fun AppEntry() {
     }
 
     // UI states
-    var showRegister by remember { mutableStateOf(false) }
-    var skipOnboarding by remember { mutableStateOf(false) }
+//    var refresh by remember { mutableStateOf(false) }
 
-    when {
-        user!!.isRegistered -> {
-            MyApp()
-        }
+//    when {
+//        isRegistered -> {
+//            MyApp()
+//        }
+//
+//        else -> {
+//            OnboardingScreen(
+//                navController = navController,
+//                prefs = prefs,
+//                onRegistered = { App() }
+//            )
+//        }
+//    }
+    var showApp by remember { mutableStateOf(isRegistered) }
 
-        skipOnboarding -> {
-            MyApp()
-        }
+    if (showApp) {
+        MyApp()
+    } else {
+        val navController = rememberNavController()
 
-        showRegister -> {
-            RegistrationScreen(
-                navController = rememberNavController(),
-                dataStoreManager = dataStore
-            )
-        }
-
-        // 👉 First time user → show onboarding
-        else -> {
-            OnboardingScreen(
-                onSkip = {
-                    skipOnboarding = true
-                },
-                onRegister = { showRegister = true }
-            )
-        }
+        OnboardingScreen(
+            navController = navController,
+            prefs = prefs,
+            onRegistered = {
+                showApp = true   // ← SIMPLE & FINAL
+            }
+        )
     }
 }
 
