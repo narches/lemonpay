@@ -251,7 +251,7 @@ Running the Backend
 
 Clone the repository:
 
-git clone https://github.com/your-org/lemonpay.git
+git clone https://github.com/narches/lemonpay.git
 cd lemonpay/backend
 
 Start the application:
