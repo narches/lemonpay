@@ -1,61 +1,91 @@
-package com.example.lemon.fund
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.example.lemon.network.AccountApi
-import com.example.lemon.network.ApiClient
-import com.example.lemon.network.models.FundRequest
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
-
-
-class FundViewModel(
-    private val accountApi: AccountApi = ApiClient.retrofit.create(AccountApi::class.java)
-) : ViewModel() {
-
-    private val _loading = MutableStateFlow(false)
-    val loading: StateFlow<Boolean> = _loading
-
-    private val _message = MutableStateFlow<String?>(null)
-    val message: StateFlow<String?> = _message
-
-    /**
-     * Fund account
-     * phone = account number
-     * token = JWT (later moved to interceptor)
-     */
-    fun fundAccount(
-        phone: String,
-        amount: Double,
-        token: String
-    ) {
-        if (amount <= 0) {
-            _message.value = "Amount must be greater than zero"
-            return
-        }
-
-        viewModelScope.launch {
-            try {
-                _loading.value = true
-
-                accountApi.fund(
-                    FundRequest(
-                        toAccount = phone,
-                        amount = amount
-                    )
-                )
-
-                _message.value = "Account funded successfully"
-            } catch (e: Exception) {
-                _message.value = e.localizedMessage ?: "Funding failed"
-            } finally {
-                _loading.value = false
-            }
-        }
-    }
-
-    fun clearMessage() {
-        _message.value = null
-    }
-}
+//
+//package com.example.lemon.fund
+//
+//import android.widget.Toast
+//import androidx.compose.foundation.layout.*
+//import androidx.compose.foundation.text.KeyboardOptions
+//import androidx.compose.material.*
+//import androidx.compose.runtime.*
+//import androidx.compose.ui.Alignment
+//import androidx.compose.ui.Modifier
+//import androidx.compose.ui.platform.LocalContext
+//import androidx.compose.ui.text.input.KeyboardType
+//import androidx.compose.ui.unit.dp
+//import androidx.lifecycle.viewmodel.compose.viewModel
+//import androidx.navigation.NavController
+//
+//@Composable
+//fun FundScreen(
+//    navController: NavController,
+//    phoneNumber: String,
+//    viewModel: FundViewModel = viewModel()
+//) {
+//    val context = LocalContext.current
+//
+//    val loading by viewModel.loading.collectAsState()
+//    val success by viewModel.success.collectAsState()
+//    val error by viewModel.error.collectAsState()
+//
+//    var amount by remember { mutableStateOf("") }
+//
+//    LaunchedEffect(success) {
+//        if (success) {
+//            Toast.makeText(
+//                context,
+//                "Account funded successfully",
+//                Toast.LENGTH_SHORT
+//            ).show()
+//            navController.popBackStack()
+//        }
+//    }
+//
+//    LaunchedEffect(error) {
+//        error?.let {
+//            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+//            viewModel.clearError()
+//        }
+//    }
+//
+//    Column(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .padding(24.dp),
+//        verticalArrangement = Arrangement.Center
+//    ) {
+//
+//        Text(
+//            text = "Fund Account",
+//            style = MaterialTheme.typography.h5
+//        )
+//
+//        Spacer(modifier = Modifier.height(16.dp))
+//
+//        OutlinedTextField(
+//            value = amount,
+//            onValueChange = { amount = it },
+//            label = { Text("Amount") },
+//            keyboardOptions = KeyboardOptions(
+//                keyboardType = KeyboardType.Number
+//            ),
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//
+//        Spacer(modifier = Modifier.height(24.dp))
+//
+//        Button(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .height(50.dp),
+//            enabled = !loading,
+//            onClick = {
+//                viewModel.fundAccount(
+//                    phone = myAccountNumber,
+//                    amount = amount.toDoubleOrNull() ?: 0.0
+//                )
+//            }
+//        ) {
+//            Text(if (loading) "Processing..." else "Fund Account")
+//        }
+//    }
+//}

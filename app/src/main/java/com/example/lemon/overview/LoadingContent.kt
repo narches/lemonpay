@@ -9,10 +9,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun ErrorContent(
-    message: String,
-    onRetry: () -> Unit,
-    modifier: Modifier = Modifier
+fun LoadingContent(
+    modifier: Modifier = Modifier,
+    message: String = "Loading…"
 ) {
     Box(
         modifier = modifier
@@ -24,21 +23,15 @@ fun ErrorContent(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text(
-                text = message,
-                style = MaterialTheme.typography.body1,
-                color = MaterialTheme.colors.error
+            CircularProgressIndicator(
+                color = Color(0xFFF4CE14)
             )
 
-            Button(
-                onClick = onRetry,
-                colors = ButtonDefaults.buttonColors(
-                    backgroundColor = Color(0xFFF4CE14),
-                    contentColor = Color(0xFF111111)
-                )
-            ) {
-                Text("Retry")
-            }
+            Text(
+                text = message,
+                style = MaterialTheme.typography.body2,
+                color = Color.White.copy(alpha = 0.7f)
+            )
         }
     }
 }

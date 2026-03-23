@@ -1,39 +1,23 @@
-package com.example.lemon.network.DTO
+package com.example.lemon.network.serialization
 
-import com.example.lemon.model.TransactionStatus
-import com.example.lemon.model.TransactionType
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 import java.math.BigDecimal
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 
+object BigDecimalSerializer : KSerializer<BigDecimal> {
 
-@Serializable
-data class TransactionResponse(
+    override val descriptor: SerialDescriptor =
+        PrimitiveSerialDescriptor("BigDecimal", PrimitiveKind.STRING)
 
-    @SerialName("id")
-    val id: String,
+    override fun serialize(encoder: Encoder, value: BigDecimal) {
+        encoder.encodeString(value.toPlainString())
+    }
 
-    @SerialName("reference")
-    val reference: String,
-
-    @SerialName("type")
-    val type: TransactionType,
-
-    @SerialName("status")
-    val status: TransactionStatus,
-
-    @SerialName("amount")
-    val amount: BigDecimal,
-
-    @SerialName("debitPhone")
-    val debitPhone: String,
-
-    @SerialName("creditPhone")
-    val creditPhone: String,
-
-    @SerialName("description")
-    val description: String? = null,
-
-    @SerialName("createdAt")
-    val createdAt: String
-)
+    override fun deserialize(decoder: Decoder): BigDecimal {
+        return BigDecimal(decoder.decodeString())
+    }
+}

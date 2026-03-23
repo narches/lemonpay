@@ -1,5 +1,4 @@
-
-package com.example.lemon.components
+package com.example.lemon.utils
 
 
 import com.example.lemon.model.SearchIntent
@@ -9,7 +8,7 @@ fun detectSearchIntent(query: String): SearchIntent {
 
     return when {
         trimmed.all { it.isDigit() } && trimmed.length >= 10 ->
-            SearchIntent.ACCOUNT_NUMBER
+            SearchIntent.ACCOUNT
 
         trimmed.matches(Regex("""\d+(\.\d{1,2})?""")) ->
             SearchIntent.AMOUNT
@@ -22,4 +21,4 @@ fun detectSearchIntent(query: String): SearchIntent {
     }
 }
 
-annotation class SearchUtils
+

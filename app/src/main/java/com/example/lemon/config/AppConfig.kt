@@ -1,28 +1,5 @@
-package com.example.lemon.di
+package com.example.lemon.config
 
-import com.example.lemon.network.DashboardAPI
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
-import javax.inject.Singleton
-
-@Module
-@InstallIn(SingletonComponent::class)
-object NetworkModule {
-
-    @Provides
-    @Singleton
-    fun provideRetrofit(): Retrofit =
-        Retrofit.Builder()
-            .baseUrl(BASE_URL)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-
-    @Provides
-    @Singleton
-    fun provideDashboardApi(retrofit: Retrofit): DashboardAPI =
-        retrofit.create(DashboardAPI::class.java)
+object AppConfig {
+    const val BASE_URL = "http://10.0.2.2:9000/"
 }

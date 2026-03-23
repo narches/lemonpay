@@ -1,73 +1,77 @@
-package com.example.lemon.withdraw
+package com.example.lemon.session
 
+import android.content.Context
 
-import android.widget.Toast
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+class SessionManager(context: Context) {
 
-@Composable
-fun WithdrawScreen(
-    phoneNumber: String,
-    onSuccess: () -> Unit
-) {
-    val context = LocalContext.current
-    val viewModel: WithdrawViewModel = viewModel()
+    private val prefs =
+        context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
 
-    val loading by viewModel.loading.collectAsState()
-    val message by viewModel.message.collectAsState()
+    companion object {
+        private const val KEY_ACCESS_TOKEN = "ACCESS_TOKEN"
+        private const val KEY_PHONE = "PHONE_NUMBER"
+        private const val KEY_NAME = "USER_NAME"
 
-    var amount by remember { mutableStateOf("") }
-
-    LaunchedEffect(message) {
-        message?.let {
-            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
-            if (it.contains("success", ignoreCase = true)) {
-                onSuccess()
-            }
-            viewModel.clearMessage()
-        }
+        private const val KEY_EMAIL = "EMAIL"
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.Center
+    /* -------------------- SAVE -------------------- */
+
+    fun saveSession(
+        accessToken: String,
+        phoneNumber: String,
+        email: String,
+        name: String
     ) {
+        prefs.edit()
+            .putString(KEY_ACCESS_TOKEN, accessToken)
+            .putString(KEY_PHONE, phoneNumber)
+            .putString(KEY_NAME, name)
+            .putString(KEY_EMAIL, email)
+            .apply()
+    }
 
-        Text("Withdraw Funds", style = MaterialTheme.typography.h5)
+    /* -------------------- READ -------------------- */
 
-        Spacer(Modifier.height(16.dp))
+    fun getAccessToken(): String? =
+        prefs.getString(KEY_ACCESS_TOKEN, null)
 
-        OutlinedTextField(
-            value = amount,
-            onValueChange = { amount = it },
-            label = { Text("Amount") },
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp)
-        )
+    fun getPhoneNumber(): String? =
+        prefs.getString(KEY_PHONE, null)
 
-        Spacer(Modifier.height(24.dp))
+    fun getUserName(): String? =
+        prefs.getString(KEY_NAME, null)
 
-        Button(
-            onClick = {
-                viewModel.withdraw(
-                    phoneNumber = phoneNumber,
-                    amount = amount.toDoubleOrNull() ?: 0.0
-                )
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp),
-            enabled = !loading
-        ) {
-            Text(if (loading) "Processing..." else "Withdraw")
-        }
+    fun getEmail(): String? =
+        prefs.getString(KEY_EMAIL, null)
+
+    /**
+     * User is logged in if a JWT exists.
+     */
+    fun isLoggedIn(): Boolean =
+        !getAccessToken().isNullOrBlank()
+
+    /* -------------------- REQUIRE -------------------- */
+
+    fun requirePhoneNumber(): String =
+        getPhoneNumber()
+            ?: throw IllegalStateException("Phone number not found in session")
+
+    fun requireUserName(): String =
+        getUserName()
+            ?: throw IllegalStateException("Username not found in session")
+
+    fun requireEmail(): String =
+        getEmail()
+            ?: throw IllegalStateException("Email not found in session")
+
+    fun requireAccessToken(): String =
+        getAccessToken()
+            ?: throw IllegalStateException("Access token not found in session")
+
+    /* -------------------- CLEAR -------------------- */
+
+    fun clear() {
+        prefs.edit().clear().apply()
     }
 }

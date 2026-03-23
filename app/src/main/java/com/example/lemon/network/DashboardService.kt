@@ -1,14 +1,4 @@
-//
-//package com.example.lemon.network
-//import com.example.lemon.network.models.*
-//import retrofit2.http.GET
-//
-//
-//interface DashboardAPI {
-//
-//    @GET("api/dashboard")
-//    suspend fun getDashboard(): DashboardResponse
-//}
+
 
 
 package com.example.lemon.network
@@ -26,5 +16,5 @@ class DashboardService @Inject constructor(
 ) {
 
     suspend fun getDashboard(): DashboardResponse =
-        client.get("api/dashboard").body()
+        client.get("/api/dashboard").body()
 }

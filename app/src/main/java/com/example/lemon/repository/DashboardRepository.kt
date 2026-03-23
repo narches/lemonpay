@@ -1,18 +1,18 @@
 
 
+
 package com.example.lemon.repository
 
-import com.example.lemon.network.AccountApi
-import com.example.lemon.network.models.BalanceResponse
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import com.example.lemon.mappers.toDashboardDTO
+import com.example.lemon.network.DTO.DashboardDTO
+import com.example.lemon.network.DashboardService
+import javax.inject.Inject
 
-class AccountRepository(
-    private val api: AccountApi
+
+class DashboardRepository @Inject constructor(
+    private val dashboardService: DashboardService
 ) {
-    suspend fun getBalance(token: String): BalanceResponse {
-        return withContext(Dispatchers.IO) {
-            api.getBalance("Bearer $token")
-        }
-    }
+
+    suspend fun getDashboard(): DashboardDTO =
+        dashboardService.getDashboard().toDashboardDTO()
 }

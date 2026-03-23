@@ -1,93 +1,65 @@
 package com.example.lemon.transactions
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.clickable
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
+import androidx.compose.material.ListItem
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.lemon.components.SearchBar
-import com.example.lemon.model.SearchIntent
-import com.example.lemon.utils.detectSearchIntent
-import com.google.accompanist.swiperefresh.*
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import com.example.lemon.model.TransactionStatus
+import com.example.lemon.network.DTO.TransactionDTO
+import java.text.NumberFormat
+import java.util.Locale
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun TransactionScreen(
-    onTransactionClick: (String) -> Unit,
-    viewModel: TransactionViewModel = viewModel()
+fun TransactionRow(
+    transaction: TransactionDTO,
+    onClick: () -> Unit
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-    var searchQuery by remember { mutableStateOf("") }
+    val LemonYellow = Color(0xFFF4CE14)
+    val LemonBlack = Color(0xFF000000)
+    val amountColor =
+        if (transaction.status == TransactionStatus.COMPLETED)
+            MaterialTheme.colors.error
+        else
+            MaterialTheme.colors.primary
 
-    LaunchedEffect(Unit) {
-        viewModel.load()
-    }
+    ListItem(
+        modifier = Modifier.clickable(onClick = onClick),
 
-    val filtered = remember(searchQuery, uiState.transactions) {
-        if (searchQuery.isBlank()) uiState.transactions
-        else {
-            val intent = detectSearchIntent(searchQuery)
-            uiState.transactions.filter { tx ->
-                when (intent) {
-                    SearchIntent.ACCOUNT_NUMBER ->
-                        tx.debitPhone.contains(searchQuery) ||
-                                tx.creditPhone.contains(searchQuery)
+        text = {
+            Text(
+                text = transaction.description ?: "Transaction",
+                style = MaterialTheme.typography.body1,
+                        color = LemonYellow
 
-                    SearchIntent.AMOUNT ->
-                        tx.amount.toPlainString().contains(searchQuery)
 
-                    else -> false
-                }
-            }
-        }
-    }
-
-    SwipeRefresh(
-        state = rememberSwipeRefreshState(uiState.isRefreshing),
-        onRefresh = viewModel::refresh
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-
-            SearchBar(
-                query = searchQuery,
-                onQueryChange = { searchQuery = it },
-                modifier = Modifier.fillMaxWidth()
             )
+        },
 
-            Spacer(Modifier.height(12.dp))
+        secondaryText = {
+            Text(
+                text = transaction.createdAt,
+                color = LemonYellow,
+                style = MaterialTheme.typography.caption
+            )
+        },
 
-            when {
-                uiState.isLoading -> {
-                    CircularProgressIndicator()
-                }
-
-                uiState.error != null -> {
-                    Text(
-                        text = uiState.error!!,
-                        color = MaterialTheme.colors.error
-                    )
-                }
-
-                else -> {
-                    LazyColumn {
-                        items(filtered) { tx ->
-                            TransactionRow(
-                                transaction = tx,
-                                onClick = {
-                                    onTransactionClick(tx.reference)
-                                }
-                            )
-                            Divider()
-                        }
-                    }
-                }
-            }
+        trailing = {
+            Text(
+                text = formatAmount(transaction.amount),
+                color = amountColor,
+                fontWeight = FontWeight.SemiBold
+            )
         }
-    }
+    )
+}
+
+private fun formatAmount(amount: java.math.BigDecimal): String {
+    val formatter = NumberFormat.getCurrencyInstance(Locale("en", "NG"))
+    return formatter.format(amount)
 }

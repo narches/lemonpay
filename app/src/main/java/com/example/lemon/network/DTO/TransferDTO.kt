@@ -1,15 +1,17 @@
-package com.example.lemon.network.DTO
+package com.example.lemon.network
 
 
 
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.Serializable
 import java.math.BigDecimal
 
 
 
-data class DashboardDTO(
-    val name: String,
-    val accountId: String,
-    val balance: BigDecimal,
-    val recentTransactions: List<TransactionDTO>
+@Serializable
+data class TransferDTO(
+    val toPhoneNumber: String,
+    val amount: String,
+    val description: String?,
 )
 

@@ -19,6 +19,7 @@ fun TransactionDetailRoute(
 
     TransactionDetailScreen(
         uiState = uiState,
-        onBack = onBack
+        onBack = onBack,
+        onRetry = { viewModel.retry(reference) }
     )
 }

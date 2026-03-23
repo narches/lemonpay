@@ -1,20 +1,11 @@
 
 
-package com.example.lemon.utils
+package com.example.lemon.ui.toast
 
 
-import android.os.Build
-import androidx.annotation.RequiresApi
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 
-@RequiresApi(Build.VERSION_CODES.O)
-fun Instant.toReadableDate(): String {
-    val formatter = DateTimeFormatter
-        .ofPattern("dd MMM yyyy, HH:mm")
-        .withZone(ZoneId.systemDefault())
 
-    return formatter.format(this)
+sealed class UiToast {
+    data class Error(val message: String) : UiToast()
+    data class Success(val message: String) : UiToast()
 }
-

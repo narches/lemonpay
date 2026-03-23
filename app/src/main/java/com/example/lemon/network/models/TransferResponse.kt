@@ -7,23 +7,11 @@ import kotlinx.serialization.Serializable
 import java.math.BigDecimal
 
 @Serializable
-data class TransactionResponse(
-
-    val id: String,
+data class TransferResponse(
 
     val reference: String,
-
-    val type: TransactionType,
-
-    val status: TransactionStatus,
-
-    @Contextual
-    val amount: BigDecimal,
-
-    val debitPhone: String,
-
-    val creditPhone: String,
-
-    val description: String,
+    val status: String,
+    val amount: String,
+    val toPhoneNumber: String,
     val createdAt: String
 )

@@ -1,35 +1,31 @@
 package com.example.lemon.network
 
-import com.example.lemon.network.models.RegisterRequest
-import com.example.lemon.network.models.RegisterResponse
+import com.example.lemon.network.models.AuthResponse
 import com.example.lemon.network.models.LoginRequest
-import com.example.lemon.network.models.LoginResponse
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.http.Body
-import retrofit2.http.POST
+import com.example.lemon.network.models.RegisterRequest
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
+import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
+class AuthService @Inject constructor(
+    private val client: HttpClient
+) {
 
-interface AuthAPI {
+    suspend fun login(request: LoginRequest): AuthResponse =
+        client.post("/auth/login") {
+            contentType(ContentType.Application.Json)
+            setBody(request)
+        }.body<AuthResponse>()
 
-    @POST("auth/login")
-    suspend fun login(
-        @Body request: LoginRequest
-    ): LoginResponse
-
-    @POST("auth/register")
-    suspend fun register(
-        @Body request: RegisterRequest
-    ): RegisterResponse
-
-    companion object {
-        fun create(): AuthAPI {
-            val retrofit = Retrofit.Builder()
-                .baseUrl("http://10.0.2.2:9000/")
-                .addConverterFactory(GsonConverterFactory.create())
-                .build()
-
-            return retrofit.create(AuthAPI::class.java)
-        }
-    }
+    suspend fun register(request: RegisterRequest): AuthResponse =
+        client.post("/auth/register") {
+            contentType(ContentType.Application.Json)
+            setBody(request)
+        }.body<AuthResponse>()
 }

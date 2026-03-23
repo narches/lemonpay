@@ -3,9 +3,16 @@
 package com.example.lemon.ui.toast
 
 
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 
 
-sealed class UiToast {
-    data class Error(val message: String) : UiToast()
-    data class Success(val message: String) : UiToast()
+object ToastManager {
+    private val _events = MutableSharedFlow<UiToast>()
+    val events = _events.asSharedFlow()
+
+    suspend fun show(toast: UiToast) {
+        _events.emit(toast)
+
+    }
 }

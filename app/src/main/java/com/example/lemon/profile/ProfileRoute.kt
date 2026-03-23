@@ -1,77 +1,65 @@
 package com.example.lemon.profile
 
-import androidx.compose.runtime.*
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
+
+
 import android.widget.Toast
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
-import com.example.lemon.transfer.receipt.generateBrandedTransactionPdf
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
+import com.example.lemon.profile.ui.ProfileScreen
 
 @Composable
-fun TransferRoute(
+fun ProfileRoute(
     navController: NavController,
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
+    /* ---------- ONE-OFF EVENTS ---------- */
+
     LaunchedEffect(Unit) {
-        viewModel.events.collect {
-            if (it is TransferEvent.Toast) {
-                Toast.makeText(context, it.message, Toast.LENGTH_SHORT).show()
+        viewModel.events.collect { event ->
+            when (event) {
+                is ProfileEvent.Toast ->
+                    Toast.makeText(
+                        context,
+                        event.message,
+                        Toast.LENGTH_SHORT
+                    ).show()
+
+                ProfileEvent.Logout ->
+                    navController.navigate("login") {
+                        popUpTo("home") { inclusive = true }
+                    }
             }
         }
     }
 
-    when (uiState) {
-        is TransferUiState.Form ->
-            TransferFormScreen(
-                state = uiState as TransferUiState.Form,
-                onChange = viewModel::updateForm,
-                onNext = viewModel::proceedToSummary
-            )
+    /* ---------- UI STATE ---------- */
 
-        is TransferUiState.Summary -> {
-            val summary = uiState as TransferUiState.Summary
+    when (val state = uiState) {
+        ProfileUiState.Loading -> Unit
 
-
-            TransferSummaryScreen(
-                state = uiState as TransferUiState.Summary,
+        is ProfileUiState.Success ->
+            ProfileScreen(
+                profile = state.profile,
                 onBack = {
-                    viewModel.updateForm(
-                        summary.phone,
-                        summary.amount,
-                        summary.description
-                    )
-                },
-                onConfirm = viewModel::submitTransfer
-            )
-
-        }
-
-        is TransferUiState.Loading ->
-            TransferLoadingScreen()
-
-        is TransferUiState.Success -> {
-            val success = uiState as TransferUiState.Success
-
-            TransferSuccessScreen(
-                state = success,
-                onViewReceipt = {
-                    val pdfFile = generateBrandedTransactionPdf(context, success)
-
-                    navController.currentBackStackEntry
-                        ?.savedStateHandle
-                        ?.set("receipt_pdf", pdfFile)
-
-                    navController.navigate("receipt-preview")
-                },
-                onDone = {
-                    navController.navigate("HOME") {
-                        popUpTo("transfer") { inclusive = true }
+                    if (!navController.popBackStack()) {
+                        navController.navigate("home")
                     }
-                }
+                },
+                onLogout = viewModel::logout
             )
+
+        is ProfileUiState.Error -> {
+            LaunchedEffect(state.message) {
+                Toast.makeText(context, state.message, Toast.LENGTH_SHORT).show()
+            }
         }
     }
 }

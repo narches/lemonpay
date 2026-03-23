@@ -1,58 +1,69 @@
+package com.example.lemon.validation
 
-package com.example.lemon.auth
+import java.math.BigDecimal
 
-private val EMAIL_REGEX =
-    Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")
+object AuthValidator {
 
-private val NAME_REGEX =
-    Regex("^[A-Za-z ]{2,40}$")
-
-fun validateName(name: String): String? {
-    return when {
-        name.isBlank() ->
-            "Name is required"
-        !NAME_REGEX.matches(name) ->
-            "Name must contain only letters and be at least 2 characters"
-        else -> null
+    fun validateName(name: String): String? {
+        return when {
+            name.isBlank() -> ""
+            name.length < 2 -> "Name must be at least 2 characters"
+            !name.matches(Regex("^[A-Za-z ]+$")) ->
+                "Name can only contain letters"
+            else -> null
+        }
     }
-}
 
-fun validateEmail(email: String): String? {
-    return when {
-        email.isBlank() ->
-            "Email is required"
-        !EMAIL_REGEX.matches(email) ->
-            "Enter a valid email address"
-        else -> null
+    fun validateDescription(name: String): String? {
+        return when {
+            name.isBlank() -> ""
+            name.length < 2 -> "Name must be at least 2 characters"
+            !name.matches(Regex("^[A-Za-z ]+$")) ->
+                "Name can only contain letters"
+            else -> null
+        }
     }
-}
 
-fun validatePhone(phone: String): String? {
-    return when {
-        phone.isBlank() ->
-            "Phone number is required"
-        phone.length != 10 ->
-            "Phone number must be exactly 10 digits"
-        phone.startsWith("0") ->
-            "Phone number must not start with 0"
-        phone.startsWith("+") ->
-            "Do not include country code"
-        !phone.all { it.isDigit() } ->
-            "Phone number must contain only digits"
-        else -> null
+    fun validateEmail(email: String): String? {
+        return when {
+            email.isBlank() -> ""
+            !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() ->
+                "Enter a valid email address"
+            else -> null
+        }
     }
-}
 
-fun validatePassword(password: String): String? {
-    return when {
-        password.isBlank() ->
-            "Password is required"
-        password.length < 8 ->
-            "Password must be at least 8 characters"
-        !password.any { it.isDigit() } ->
-            "Password must contain at least one number"
-        !password.any { it.isUpperCase() } ->
-            "Password must contain at least one uppercase letter"
-        else -> null
+    fun validatePhone(phoneNumber: String): String? {
+        return when {
+            phoneNumber.isBlank() -> ""
+            phoneNumber.length != 11 -> "Phone number must be exactly 11 digits"
+            phoneNumber.startsWith("+") -> "Do not include country code"
+            else -> null
+        }
+    }
+
+    fun validatePassword(password: String): String? {
+        return when {
+            password.length < 8 ->
+                ""
+            !password.any { it.isUpperCase() } ->
+                "Password must contain an uppercase letter"
+            !password.any { it.isDigit() } ->
+                "Password must contain a number"
+            else -> null
+        }
+    }
+
+    fun validateAmount(input: String): Boolean {
+        // 1. Try to parse to BigDecimal
+        val decimal = input.toBigDecimalOrNull() ?: return false
+
+        // 2. Numerical check: must be greater than zero
+        if (decimal <= BigDecimal.ZERO) return false
+
+        // 3. Precision check: e.g., max 2 decimal places for currency
+        if (decimal.scale() > 2) return false
+
+        return true
     }
 }

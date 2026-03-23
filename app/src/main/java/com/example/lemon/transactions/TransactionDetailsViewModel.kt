@@ -1,61 +1,56 @@
 package com.example.lemon.transactions
 
-import androidx.compose.material.*
-import androidx.compose.runtime.Composable
-import androidx.compose.foundation.layout.*
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import com.example.lemon.model.TransactionType
-import com.example.lemon.network.models.TransactionDTO
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.lemon.repository.TransactionRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+@HiltViewModel
+class TransactionDetailViewModel @Inject constructor(
+    private val repository: TransactionRepository,
+    savedStateHandle: SavedStateHandle
+) : ViewModel() {
+
+    private val reference: String = savedStateHandle["reference"]
+            ?: error(" Transaction reference is missing")
+
+    private val _uiState = MutableStateFlow(TransactionDetailUiState())
+    val uiState: StateFlow<TransactionDetailUiState> = _uiState
 
 
 
-@Composable
-fun TransactionItem(
-    transaction: TransactionDTO,
-    onClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 12.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
+    fun load(reference: String) {
+        if (_uiState.value.isLoading) return
 
-        Column {
-            Text(
-                text = transaction.type.name.lowercase().replaceFirstChar { it.uppercase() },
-                style = MaterialTheme.typography.body1
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                isLoading = true,
+                errorMessage = null
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                text = transaction.createdAt,
-                style = MaterialTheme.typography.caption
-            )
+            runCatching {
+                repository.getTransaction(reference)
+            }.onSuccess { transaction ->
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    transaction = transaction
+                )
+            }.onFailure { throwable ->
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = throwable.message ?: "Unable to load transaction"
+                )
+            }
         }
-
-        Text(
-            text = formatAmount(transaction),
-            style = MaterialTheme.typography.body1
-        )
     }
-}
 
-
-private fun formatAmount(tx: TransactionDTO): String {
-    val amount = "₦%,.2f".format(tx.amount.toDouble())
-
-    return when (tx.type) {
-        TransactionType.TRANSFER ->
-            if (tx.debitPhone == tx.creditPhone) amount
-            else "-$amount"
-
-        TransactionType.FUND ->
-            "+$amount"
-
-        TransactionType.WITHDRAW ->
-            "-$amount"
+    fun retry(reference: String) {
+        load(reference)
     }
 }

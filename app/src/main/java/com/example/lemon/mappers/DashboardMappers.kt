@@ -1,27 +1,13 @@
-
 package com.example.lemon.mappers
 
-import com.example.lemon.network.models.TransactionResponse
-import com.example.lemon.model.*
-import com.example.lemon.network.DTO.TransactionDTO
-import com.example.lemon.model.TransactionDirection
+import com.example.lemon.network.DTO.DashboardDTO
+import com.example.lemon.network.models.DashboardResponse
 
-
-fun TransactionResponse.toDTO(myPhone: String): TransactionDTO {
-    val direction =
-        if (debitPhone == myPhone) TransactionDirection.OUT
-        else TransactionDirection.IN
-
-    return TransactionDTO(
-        id = id,
-        reference = reference,
-        type = type,
-        amount = amount,
-        debitPhone = debitPhone,
-        status = status,
-        creditPhone = creditPhone,
-        description = description ?: "Transaction",
-        createdAt = createdAt,
-        direction = direction
+fun DashboardResponse.toDashboardDTO(): DashboardDTO {
+    return DashboardDTO(
+        name = name,
+        accountId = phoneNumber, // ← THIS answers your confusion
+        balance = balance,
+        recentTransactions = recentTransactions
     )
 }

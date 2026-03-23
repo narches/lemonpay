@@ -1,20 +1,16 @@
 package com.example.lemon.network.models
 
+
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import java.math.BigDecimal
+
 
 @Serializable
-data class RegisterRequest(
+data class TransferRequest(
 
-    @SerialName("name")
-    val name: String,
-
-    @SerialName("email")
-    val email: String,
-
-    @SerialName("phoneNumber")
-    val phoneNumber: String,
-
-    @SerialName("password")
-    val password: String
+    val toPhoneNumber: String,
+    val amount: String,
+    val description: String?,
 )

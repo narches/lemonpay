@@ -7,39 +7,28 @@ import com.example.lemon.navigation.Routes
 import com.example.lemon.ui.toast.ToastManager
 
 @Composable
-fun LoginRoute(
+fun LogoutRoute(
     navController: NavController,
     viewModel: AuthViewModel = hiltViewModel()
 ) {
-    val loading by viewModel.loading.collectAsState()
+    // Trigger logout once
+    LaunchedEffect(Unit) {
+        viewModel.logout()
+    }
 
+    // Listen for logout completion
+    LaunchedEffect(Unit) {
+        viewModel.logoutSuccess.collect {
+            navController.navigate(Routes.INDEX) {
+                popUpTo(0) { inclusive = true }
+            }
+        }
+    }
 
+    // Optional toast handling
     LaunchedEffect(Unit) {
         viewModel.toastEvent.collect { toast ->
             ToastManager.show(toast)
         }
     }
-
-    // 🚀 Navigation collector
-    LaunchedEffect(Unit) {
-        viewModel.loginSuccess.collect {
-            navController.navigate(Routes.HOME) {
-                popUpTo(Routes.LOGIN) { inclusive = true }
-            }
-        }
-    }
-
-
-
-    LoginScreen(
-        loading = loading,
-        onLogin = { phone, password ->
-            viewModel.login(phone, password)
-        },
-        onNavigateToRegister = {
-            navController.navigate(Routes.REGISTER)
-        },
-        onBack = {navController.popBackStack()}
-    )
 }
-
