@@ -1,54 +1,54 @@
 
+
 package com.example.lemon
 
-
-
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.*
+import androidx.compose.ui.res.painterResource
+import androidx.core.view.WindowCompat
+import androidx.navigation.compose.rememberNavController
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.*
-import android.os.Build
-import androidx.compose.runtime.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
-import android.content.Context
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
-import androidx.navigation.NavType
-import androidx.navigation.navArgument
 import androidx.compose.ui.graphics.Color
+import androidx.navigation.NavController
 import androidx.navigation.compose.composable
-import androidx.core.view.WindowCompat
-import androidx.navigation.compose.rememberNavController
-import kotlinx.coroutines.launch
-import com.example.lemon.profile.ProfileScreen
-import com.example.lemon.onboarding.OnboardingScreen
-import com.example.lemon.datastore.DataStoreManager
 import kotlinx.coroutines.delay
-import com.example.lemon.onboarding.OnboardingScreen
-import androidx.compose.material.CircularProgressIndicator
+import com.example.lemon.navigation.Routes
+import com.example.lemon.auth.LoginRoute
+import com.example.lemon.auth.LogoutRoute
+import com.example.lemon.auth.RegistrationRoute
+import com.example.lemon.overview.OverviewRoute
+import com.example.lemon.profile.ProfileRoute
+import com.example.lemon.transactions.TransactionDetailRoute
+import com.example.lemon.transactions.TransactionRoute
+import com.example.lemon.transfer.TransferRoute
+import com.example.lemon.transfer.receipt.ReceiptPreviewScreen
+import com.example.lemon.transfer.receipt.downloadPdf
+import com.example.lemon.ui.toast.CenteredAnimatedToast
+import com.example.lemon.ui.toast.ToastManager
+import com.example.lemon.ui.toast.UiToast
+import dagger.hilt.android.AndroidEntryPoint
+import java.io.File
 
-
-
-
-
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    private lateinit var dataStoreManager: DataStoreManager
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        dataStoreManager = DataStoreManager(this)
+
+
         WindowCompat.setDecorFitsSystemWindows(window, false)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             window.statusBarColor = android.graphics.Color.TRANSPARENT
@@ -56,195 +56,123 @@ class MainActivity : ComponentActivity() {
         }
         setContent {
             AppEntry()
+
+            AppToastHost()
         }
     }
 }
 
 
-
 @Composable
-fun AppEntry() {
-    val context = LocalContext.current
+private fun AppEntry() {
     val navController = rememberNavController()
-    val dataStore = remember { DataStoreManager(context) }
-    val user by dataStore.userFlow.collectAsState(initial = null)
-    val prefs = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
 
-    val isRegistered = prefs.getBoolean("isRegistered", false)
-    // Loading state
-    if (user == null) {
-        Box(Modifier.fillMaxSize(), Alignment.Center) {
-            CircularProgressIndicator()
+
+
+    NavHost(
+        navController = navController,
+        startDestination = Routes.SPLASH
+    ) {
+
+        composable(Routes.SPLASH) {
+            SplashScreen(
+                onFinished = {
+                    navController.navigate(Routes.INDEX) {
+                        popUpTo(Routes.SPLASH) { inclusive = true }
+                    }
+                }
+            )
         }
-        return
-    }
 
-    // UI states
-//    var refresh by remember { mutableStateOf(false) }
+        composable(Routes.INDEX) {
+            IndexScreen(navController = navController)
+        }
 
-//    when {
-//        isRegistered -> {
-//            MyApp()
-//        }
-//
-//        else -> {
-//            OnboardingScreen(
-//                navController = navController,
-//                prefs = prefs,
-//                onRegistered = { App() }
-//            )
-//        }
-//    }
-    var showApp by remember { mutableStateOf(isRegistered) }
+        composable(Routes.LOGIN) {
+            LoginRoute(navController)
+        }
 
-    if (showApp) {
-        MyApp()
-    } else {
-        val navController = rememberNavController()
+        composable(Routes.USER) {
+            ProfileRoute(navController)
+        }
 
-        OnboardingScreen(
-            navController = navController,
-            prefs = prefs,
-            onRegistered = {
-                showApp = true   // ← SIMPLE & FINAL
-            }
-        )
+        composable(Routes.REGISTER) {
+            RegistrationRoute(navController)
+        }
+
+        composable(Routes.TRANSFER) {
+            TransferRoute(navController)
+        }
+
+
+        composable(Routes.HOME) {
+            HomeScreen(navController = navController)
+        }
+
+
+        composable(Routes.OVERVIEW) {
+            OverviewRoute()
+        }
+
+
+        composable("receipt-preview") {
+
+            val navBackStackEntry = navController.previousBackStackEntry
+                ?: return@composable
+            val context = LocalContext.current
+            val pdfFile =
+                navBackStackEntry.savedStateHandle
+                    .get<File>("receipt_pdf")
+                    ?: return@composable
+
+            ReceiptPreviewScreen(
+                pdfFile = pdfFile,
+                onDownload = {
+                    downloadPdf(
+                        context,
+                        sourceFile = pdfFile,
+                        fileName = "lemon_receipt_${System.currentTimeMillis()}.pdf"
+                    )
+                },
+                onBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+
+        composable(Routes.TRANSACTIONS){
+            TransactionRoute(
+                navController = navController,
+                onTransactionClick = { tx ->
+                    navController.navigate("${Routes.TRANSACTION_DETAIL}/${tx.reference}")
+                }
+            )
+        }
+
+        composable("${Routes.TRANSACTION_DETAIL}/{reference}") { backStackEntry ->
+            val reference =
+                backStackEntry.arguments!!.getString("reference")!!
+
+            TransactionDetailRoute(
+                reference = reference,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
     }
 }
 
 
-
-
-
-
-
 @Composable
-fun MyApp() {
-
-    val context = LocalContext.current
-    val dataStoreManager = remember { DataStoreManager(context) }
-
-    val navController = rememberNavController()
-
-    var showSplash by remember { mutableStateOf(true) }
-
-    // Drawer state
-    val scaffoldState = rememberScaffoldState()
-    val scope = rememberCoroutineScope()
-
-    val isDrawerOpen = scaffoldState.drawerState.isOpen
-
-    // Splash delay
+fun SplashScreen(
+    onFinished: () -> Unit
+) {
     LaunchedEffect(Unit) {
-        delay(1000)
-        showSplash = false
+        delay(1500)
+        onFinished()
     }
 
-    if (showSplash) {
-        SplashScreen()
-    } else {
-        Scaffold(
-            scaffoldState = scaffoldState,
-            drawerContent = {
-                DrawerContent(
-                    onClose = {
-                        scope.launch { scaffoldState.drawerState.close() }
-                    },
-                    onItemClick = { item ->
-                        scope.launch { scaffoldState.drawerState.close() }
-                        when (item) {
-                            "Home" -> navController.navigate(Home.route)
-                            "Menu" -> navController.navigate(Menu.route)
-                            "Company" -> navController.navigate(Location.route)
-                        }
-                    },
-                    onLoginClick = {
-                        scope.launch { scaffoldState.drawerState.close() }
-                        navController.navigate("login")
-                    }
-                )
-            },
-
-            bottomBar = {
-                if (!isDrawerOpen) {
-                    MyBottomNavigation(navController = navController)
-                }
-            }
-        ) { innerPadding ->
-            Column(
-                Modifier
-                    .padding(innerPadding)
-                    .fillMaxSize()
-            ) {
-
-                MyBar(scaffoldState = scaffoldState, scope = scope, dataStoreManager = dataStoreManager, onProfileClick = {navController.navigate("profile")} )
-
-                NavHost(
-                    navController = navController,
-                    startDestination = Home.route,
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                ) {
-                    // Old routes (unchanged)
-                    composable(Menu.route) {
-                        MenuScreen(navController)
-                    }
-                    composable(Home.route) {
-                        HomeScreen(navController)
-                    }
-                    composable(Location.route) {
-                        LocationScreen()
-                    }
-
-                    // Your existing dishDetails navigation
-                    composable(
-                        route = "dishDetails/{dishName}",
-                        arguments = listOf(navArgument("dishName") {
-                            type = NavType.StringType
-                        })
-                    ) { backStackEntry ->
-                        val name = backStackEntry.arguments?.getString("dishName")
-                        val dish = Dishes.find { it.name == name }
-
-                        if (dish != null) DishDetails(dish)
-                        else Text("Dish not found")
-                    }
-
-                    // NEW ROUTES
-                    composable("login") {
-                        LoginScreen(
-                            navController = navController,
-                            dataStoreManager = dataStoreManager
-                        )
-                    }
-
-                    composable("register") {
-                        RegistrationScreen(
-                            navController = navController,
-                            dataStoreManager = dataStoreManager
-                        )
-                    }
-
-                    composable("profile") {
-                        ProfileScreen(
-                            navController = navController,
-                            dataStore = dataStoreManager
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-
-
-
-
-
-@Composable
-fun SplashScreen() {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -253,8 +181,8 @@ fun SplashScreen() {
     ) {
         // Image on top
         Image(
-            painter = painterResource(id = R.drawable.gllemon), // replace with your image
-            contentDescription = "Lemon Logo",
+            painter = painterResource(id = R.drawable.llogo), // replace with your image
+            contentDescription = "Logo",
             modifier = Modifier
                 .size(120.dp) // adjust size as needed
         )
@@ -263,39 +191,33 @@ fun SplashScreen() {
 
 
 
-@Composable
-fun MyBottomNavigation(navController: NavController) {
-    val destinationList = listOf(
-        Menu,
-        Home,
-        Location
-    )
-    val selectedIndex = rememberSaveable {
-        mutableStateOf(1)
-    }
-    BottomNavigation (
-        modifier = Modifier.fillMaxWidth(),
-        backgroundColor = Color(0xFF495E57),
-        contentColor = Color.Yellow
-    ) {
 
-        destinationList.forEachIndexed { index, destination ->
-            BottomNavigationItem(
-                label = { Text(text = destination.title) },
-                icon = {
-                    Icon(
-                        painter = painterResource(id = destination.icon),
-                        contentDescription = destination.title
-                    )
-                },
-                selected = index == selectedIndex.value,
-                onClick = {
-                    selectedIndex.value = index
-                    navController.navigate(destinationList[index].route) {
-                        popUpTo(Home.route)
-                        launchSingleTop = true
-                    }
-                })
+
+
+@Composable
+fun AppToastHost() {
+
+    var toast by remember { mutableStateOf<UiToast?>(null) }
+    var visible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        ToastManager.events.collect { event ->
+            toast = event
+            visible = true
+
+            delay(1800)
+
+            visible = false
+            delay(300)
+
+            toast = null
         }
+    }
+
+    toast?.let {
+        CenteredAnimatedToast(
+            toast = it,
+            visible = visible
+        )
     }
 }

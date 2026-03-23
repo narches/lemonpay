@@ -1,7 +1,0 @@
-<resources>
-    <string name="app_name">Lemon</string>
-    <string name="title">Greek Salad</string>
-    <string name="location">Chicago</string>
-    <string name="description">We are a family owned Mediterranean restaurant, focused on traditional recipes served with a modern twist.</string>
-    <string name="order_for_takeaway">Order</string>
-</resources>
